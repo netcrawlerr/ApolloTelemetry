@@ -12,6 +12,9 @@ public class ServerStats
     public long TotalMemoryBytes { get; set; }          
     public long AvailableMemoryBytes { get; set; }       
     public List<DriveData> Drives { get; set; } = new();
+    
+
+    public List<DatabaseService> DatabaseServices { get; set; } = new();
 }
 
 public class DriveData
@@ -20,4 +23,7 @@ public class DriveData
     public long TotalSize { get; set; }
     public long FreeSpace { get; set; }
     public double UsedPercentage { get; set; }
+    
+    public double TotalGB { get; set; }
+    public double UsedGB { get; set; }
 }

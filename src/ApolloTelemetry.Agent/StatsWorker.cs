@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -9,12 +10,12 @@ public class StatsWorker : BackgroundService
 {
     private readonly ILogger<StatsWorker> _logger;
     private readonly HttpClient _httpClient;
+    private const double GB_IN_BYTES = 1073741824.0;
 
- 
-    // private const string DashboardUrl = "http://127.0:5002/telemetry/";
-    
+    private const string DashboardUrl = "http://127.0:5002/telemetry/";
+
     // my LTP IP
-    private const string DashboardUrl = "http://192.168.1.10:5002/telemetry/";
+    // private const string DashboardUrl = "http://192.168.1.10:5002/telemetry/";
     private readonly TimeSpan _interval = TimeSpan.FromSeconds(5);
 
     public StatsWorker(ILogger<StatsWorker> logger)
@@ -35,7 +36,7 @@ public class StatsWorker : BackgroundService
             try
             {
                 var stats = CollectSystemStats();
-                
+
                 string jsonDebug = JsonSerializer.Serialize(stats, logOptions);
                 _logger.LogInformation("DIAGNOSTIC LOG:\n{json}", jsonDebug);
 
@@ -72,7 +73,8 @@ public class StatsWorker : BackgroundService
             ProcessorCount = Environment.ProcessorCount,
             TotalMemoryBytes = memInfo.TotalAvailableMemoryBytes,
             AvailableMemoryBytes = memInfo.TotalAvailableMemoryBytes - memInfo.MemoryLoadBytes,
-            Drives = new List<DriveData>()
+            Drives = new List<DriveData>(),
+            DatabaseServices = CheckDatabaseServices()
         };
 
         try
@@ -85,13 +87,18 @@ public class StatsWorker : BackgroundService
                 {
                     if (drive.IsReady && drive.DriveType == DriveType.Fixed && drive.TotalSize > 0)
                     {
+                        double totalGb = drive.TotalSize / GB_IN_BYTES;
+                        double freeGb = drive.AvailableFreeSpace / GB_IN_BYTES;
+                        double usedGb = totalGb - freeGb;
+
                         stats.Drives.Add(new DriveData
                         {
                             Name = drive.Name,
                             TotalSize = drive.TotalSize,
                             FreeSpace = drive.AvailableFreeSpace,
-                            UsedPercentage =
-                                Math.Round(100 - ((double)drive.AvailableFreeSpace / drive.TotalSize * 100), 2)
+                            TotalGB = Math.Round(totalGb, 1),
+                            UsedGB = Math.Round(usedGb, 1),
+                            UsedPercentage = Math.Round(100 - (freeGb / totalGb * 100), 2)
                         });
                     }
                 }
@@ -111,6 +118,71 @@ public class StatsWorker : BackgroundService
         }
 
         return stats;
+    }
+
+    private List<DatabaseService> CheckDatabaseServices()
+    {
+        var services = new List<DatabaseService>
+        {
+            new() { Name = "MySQL", Status = "Unknown" },
+            new() { Name = "PostgreSQL", Status = "Unknown" },
+            new() { Name = "MSSQL", Status = "Unknown" },
+            new() { Name = "MongoDB", Status = "Unknown" }
+        };
+        
+        var dbNames = new Dictionary<string, (string Win, string Nix)>
+        {
+            { "MySQL", ("MySQL", "mysql") },
+            { "PostgreSQL", ("postgresql-x64-16", "postgresql") },
+            { "MSSQL", ("MSSQLSERVER", "mssql-server") },
+            { "MongoDB", ("MongoDB", "mongod") }
+        };
+
+        foreach (var service in services)
+        {
+            var names = dbNames[service.Name];
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                service.Status = GetWindowsServiceStatus(names.Win);
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                service.Status = GetLinuxServiceStatus(names.Nix);
+        }
+
+        return services;
+    }
+
+    private string GetWindowsServiceStatus(string serviceName)
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo("sc", $"query \"{serviceName}\"")
+                { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+            using var process = Process.Start(startInfo);
+            string output = process?.StandardOutput.ReadToEnd() ?? "";
+            if (output.Contains("RUNNING")) return "Running";
+            if (output.Contains("STOPPED")) return "Stopped";
+            return "Not Found";
+        }
+        catch
+        {
+            return "Not Found";
+        }
+    }
+
+    private string GetLinuxServiceStatus(string serviceName)
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo("systemctl", $"is-active {serviceName}")
+                { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+            using var process = Process.Start(startInfo);
+            string output = process?.StandardOutput.ReadToEnd().Trim() ?? "";
+            return output == "active" ? "Running" : (output == "inactive" ? "Stopped" : "Not Found");
+        }
+        catch
+        {
+            return "Not Found";
+        }
     }
 
     private string GetReadableUptime()
