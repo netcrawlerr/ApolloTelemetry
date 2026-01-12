@@ -11,7 +11,10 @@ public class StatsWorker : BackgroundService
     private readonly HttpClient _httpClient;
 
  
-    private const string DashboardUrl = "http://127.0.0.1:5002/telemetry/";
+    // private const string DashboardUrl = "http://127.0:5002/telemetry/";
+    
+    // my LTP IP
+    private const string DashboardUrl = "http://192.168.1.10:5002/telemetry/";
     private readonly TimeSpan _interval = TimeSpan.FromSeconds(5);
 
     public StatsWorker(ILogger<StatsWorker> logger)

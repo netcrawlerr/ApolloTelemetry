@@ -38,11 +38,14 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task StartListener()
     {
         using var listener = new HttpListener();
-        listener.Prefixes.Add("http://127.0.0.1:5002/telemetry/");
+        // listener.Prefixes.Add("http://127.0.0.1:5002/telemetry/");
 
+        // listen on all interfaces so the Desktop can reach it
+        listener.Prefixes.Add("http://*:5002/telemetry/");
         try {
             listener.Start();
-            Console.WriteLine(">>> Dashboard Active on http://127.0.0.1:5002/telemetry/");
+            // Console.WriteLine(">>> Dashboard Active on http://127.0.0.1:5002/telemetry/");
+            Console.WriteLine(">>> Dashboard Active on http://*:5002/telemetry/");
 
             while (true) {
                 var context = await listener.GetContextAsync();
