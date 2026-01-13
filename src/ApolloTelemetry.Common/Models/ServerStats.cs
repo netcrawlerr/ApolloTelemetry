@@ -6,14 +6,15 @@ public class ServerStats
 {
     public string DeviceName { get; set; } = string.Empty;
     public string Uptime { get; set; } = string.Empty;
-    public string OSVersion { get; set; } = string.Empty; 
-    public int ProcessorCount { get; set; }             
-    public double CpuUsage { get; set; }
-    public long TotalMemoryBytes { get; set; }          
-    public long AvailableMemoryBytes { get; set; }       
+    public string OSVersion { get; set; } = string.Empty;
+    public int ProcessorCount { get; set; }
+    public double CpuUsage { get; set; }           
+    public double DownloadSpeedMbps { get; set; } 
+    public double UploadSpeedMbps { get; set; }   
+    public DateTime LastUpdated { get; set; }    
+    public long TotalMemoryBytes { get; set; }
+    public long AvailableMemoryBytes { get; set; }
     public List<DriveData> Drives { get; set; } = new();
-    
-
     public List<DatabaseService> DatabaseServices { get; set; } = new();
 }
 

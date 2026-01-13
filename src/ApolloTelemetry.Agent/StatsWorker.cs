@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net.Http.Json;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using ApolloTelemetry.Common.Models;
@@ -11,6 +12,10 @@ public class StatsWorker : BackgroundService
     private readonly ILogger<StatsWorker> _logger;
     private readonly HttpClient _httpClient;
     private const double GB_IN_BYTES = 1073741824.0;
+    
+    private long _lastBytesReceived = 0;
+    private long _lastBytesSent = 0;
+    private DateTime _lastNetworkCheck = DateTime.Now;
 
     private const string DashboardUrl = "http://127.0:5002/telemetry/";
 
@@ -64,6 +69,8 @@ public class StatsWorker : BackgroundService
     {
         // using the GC API 
         var memInfo = GC.GetGCMemoryInfo();
+        
+        var (dl, ul) = CalculateNetworkSpeed();
 
         var stats = new ServerStats
         {
@@ -71,6 +78,10 @@ public class StatsWorker : BackgroundService
             Uptime = GetReadableUptime(),
             OSVersion = RuntimeInformation.OSDescription,
             ProcessorCount = Environment.ProcessorCount,
+            CpuUsage = GetCpuUsage(), 
+            DownloadSpeedMbps = dl,
+            UploadSpeedMbps = ul,
+            LastUpdated = DateTime.Now,
             TotalMemoryBytes = memInfo.TotalAvailableMemoryBytes,
             AvailableMemoryBytes = memInfo.TotalAvailableMemoryBytes - memInfo.MemoryLoadBytes,
             Drives = new List<DriveData>(),
@@ -185,6 +196,39 @@ public class StatsWorker : BackgroundService
         }
     }
 
+    private double GetCpuUsage()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            try {
+                var info = new ProcessStartInfo("bash", "-c \"top -bn1 | grep 'Cpu(s)' | awk '{print $2 + $4}'\"") 
+                    { RedirectStandardOutput = true, UseShellExecute = false };
+                using var p = Process.Start(info);
+                return double.TryParse(p?.StandardOutput.ReadToEnd(), out var res) ? res : 0;
+            } catch { return 0; }
+        }
+        return 0; 
+    }
+
+    private (double dl, double ul) CalculateNetworkSpeed()
+    {
+        var interfaces = NetworkInterface.GetAllNetworkInterfaces()
+            .Where(i => i.OperationalStatus == OperationalStatus.Up && i.NetworkInterfaceType != NetworkInterfaceType.Loopback);
+
+        long currentReceived = interfaces.Sum(i => i.GetIPStatistics().BytesReceived);
+        long currentSent = interfaces.Sum(i => i.GetIPStatistics().BytesSent);
+        
+        var elapsed = (DateTime.Now - _lastNetworkCheck).TotalSeconds;
+        
+        double dl = ((currentReceived - _lastBytesReceived) * 8 / 1_048_576.0) / elapsed;
+        double ul = ((currentSent - _lastBytesSent) * 8 / 1_048_576.0) / elapsed;
+
+        _lastBytesReceived = currentReceived;
+        _lastBytesSent = currentSent;
+        _lastNetworkCheck = DateTime.Now;
+
+        return (Math.Max(0, Math.Round(dl, 2)), Math.Max(0, Math.Round(ul, 2)));
+    }
     private string GetReadableUptime()
     {
         var t = TimeSpan.FromMilliseconds(Environment.TickCount64);

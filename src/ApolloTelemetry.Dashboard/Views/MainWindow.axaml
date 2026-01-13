@@ -3,7 +3,7 @@
         xmlns:vm="using:ApolloTelemetry.Dashboard.ViewModels"
         x:Class="ApolloTelemetry.Dashboard.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="ApolloTelemetry" Width="550" Height="750"
+        Title="ApolloTelemetry" Width="550" Height="850"
         Background="#121212">
 
     <Window.Styles>
@@ -27,14 +27,52 @@
 
     <ScrollViewer>
         <StackPanel Margin="25" Spacing="20">
+
             <StackPanel Spacing="5">
-                <TextBlock Text="SERVER STATUS" Foreground="Gray" FontSize="10" FontWeight="Bold" />
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Text="SERVER STATUS" Foreground="Gray" FontSize="10" FontWeight="Bold" />
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Stats.LastUpdated, StringFormat='LAST SEEN: {0:HH:mm:ss}'}"
+                               Foreground="#666666" FontSize="10" VerticalAlignment="Center" />
+                </Grid>
+
                 <TextBlock Text="{Binding Stats.DeviceName, FallbackValue='CONNECTING...'}"
                            Foreground="White" FontSize="32" FontWeight="Bold" />
+
                 <StackPanel Orientation="Horizontal" Spacing="15">
-                    <TextBlock Text="{Binding Stats.Uptime, StringFormat='UPTIME: {0}'}" Foreground="#00FF00" FontSize="12" />
-                    <TextBlock Text="{Binding Stats.OSVersion, StringFormat='OS: {0}'}" Foreground="#AAAAAA" FontSize="12" />
+                    <TextBlock Text="{Binding Stats.Uptime, StringFormat='UPTIME: {0}'}" Foreground="#00FF00"
+                               FontSize="12" />
+                    <TextBlock Text="{Binding Stats.OSVersion, StringFormat='OS: {0}'}" Foreground="#AAAAAA"
+                               FontSize="12" />
                 </StackPanel>
+
+
+            </StackPanel>
+
+            <Separator Background="#333333" />
+
+            <StackPanel Spacing="10">
+                <TextBlock Text="NETWORK" Foreground="Gray" FontSize="10" FontWeight="Bold" />
+                <Border Background="#1E1E1E" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+
+                    <Grid ColumnDefinitions="*, 1, *">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="DOWNLOAD" Foreground="Gray" FontSize="9" HorizontalAlignment="Center"
+                                       Margin="0,0,0,4" />
+                            <TextBlock Text="{Binding Stats.DownloadSpeedMbps, StringFormat={}{0} Mbps}"
+                                       Foreground="#00FF00" FontSize="16" FontWeight="Bold" />
+                        </StackPanel>
+
+                        <Rectangle Grid.Column="1" Fill="#333333" Width="1" VerticalAlignment="Stretch" Margin="10,0" />
+
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                            <TextBlock Text="UPLOAD" Foreground="Gray" FontSize="9" HorizontalAlignment="Center"
+                                       Margin="0,0,0,4" />
+                            <TextBlock Text="{Binding Stats.UploadSpeedMbps, StringFormat={}{0} Mbps}"
+                                       Foreground="Cyan" FontSize="16" FontWeight="Bold" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </StackPanel>
 
             <Separator Background="#333333" />
@@ -44,40 +82,37 @@
                 <UniformGrid Columns="2">
                     <Border Background="#1E1E1E" CornerRadius="8" Padding="12" Margin="5" Height="65">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Ellipse Width="10" Height="10" Classes="statusDot" Tag="{Binding MySqlStatus}"/>
+                            <Ellipse Width="10" Height="10" Classes="statusDot" Tag="{Binding MySqlStatus}" />
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="MySQL" Foreground="White" FontWeight="Bold" FontSize="13"/>
-                                <TextBlock Text="{Binding MySqlStatus}" Classes="statusText" FontSize="11"/>
+                                <TextBlock Text="MySQL" Foreground="White" FontWeight="Bold" FontSize="13" />
+                                <TextBlock Text="{Binding MySqlStatus}" Classes="statusText" FontSize="11" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
-
                     <Border Background="#1E1E1E" CornerRadius="8" Padding="12" Margin="5" Height="65">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Ellipse Width="10" Height="10" Classes="statusDot" Tag="{Binding PostgreSqlStatus}"/>
+                            <Ellipse Width="10" Height="10" Classes="statusDot" Tag="{Binding PostgreSqlStatus}" />
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="PostgreSQL" Foreground="White" FontWeight="Bold" FontSize="13"/>
-                                <TextBlock Text="{Binding PostgreSqlStatus}" Classes="statusText" FontSize="11"/>
+                                <TextBlock Text="PostgreSQL" Foreground="White" FontWeight="Bold" FontSize="13" />
+                                <TextBlock Text="{Binding PostgreSqlStatus}" Classes="statusText" FontSize="11" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
-
                     <Border Background="#1E1E1E" CornerRadius="8" Padding="12" Margin="5" Height="65">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Ellipse Width="10" Height="10" Classes="statusDot" Tag="{Binding MsSqlStatus}"/>
+                            <Ellipse Width="10" Height="10" Classes="statusDot" Tag="{Binding MsSqlStatus}" />
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="MSSQL" Foreground="White" FontWeight="Bold" FontSize="13"/>
-                                <TextBlock Text="{Binding MsSqlStatus}" Classes="statusText" FontSize="11"/>
+                                <TextBlock Text="MSSQL" Foreground="White" FontWeight="Bold" FontSize="13" />
+                                <TextBlock Text="{Binding MsSqlStatus}" Classes="statusText" FontSize="11" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
-
                     <Border Background="#1E1E1E" CornerRadius="8" Padding="12" Margin="5" Height="65">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Ellipse Width="10" Height="10" Classes="statusDot" Tag="{Binding MongoDbStatus}"/>
+                            <Ellipse Width="10" Height="10" Classes="statusDot" Tag="{Binding MongoDbStatus}" />
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="MongoDB" Foreground="White" FontWeight="Bold" FontSize="13"/>
-                                <TextBlock Text="{Binding MongoDbStatus}" Classes="statusText" FontSize="11"/>
+                                <TextBlock Text="MongoDB" Foreground="White" FontWeight="Bold" FontSize="13" />
+                                <TextBlock Text="{Binding MongoDbStatus}" Classes="statusText" FontSize="11" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -88,22 +123,37 @@
 
             <StackPanel Spacing="10">
                 <TextBlock Text="RESOURCES" Foreground="Gray" FontSize="10" FontWeight="Bold" />
+
                 <Border Background="#1E1E1E" Padding="12" CornerRadius="8">
-                    <Grid ColumnDefinitions="*, Auto">
-                        <TextBlock Text="CPU Cores" Foreground="White" />
-                        <TextBlock Grid.Column="1" Text="{Binding Stats.ProcessorCount}" Foreground="Cyan" FontWeight="Bold" />
-                    </Grid>
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*, Auto, Auto">
+                            <TextBlock Text="CPU Load" Foreground="White" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding Stats.ProcessorCount, StringFormat='({0} Cores) '}"
+                                       Foreground="Gray" FontSize="12" VerticalAlignment="Bottom" Margin="0,0,5,0" />
+                            <TextBlock Grid.Column="2" Text="{Binding Stats.CpuUsage, StringFormat={}{0}%}"
+                                       Foreground="Cyan" FontWeight="Bold" />
+                        </Grid>
+                        <ProgressBar Value="{Binding Stats.CpuUsage}" Maximum="100" Height="8"
+                                     Foreground="Cyan" Background="#333333" CornerRadius="4" />
+                    </StackPanel>
                 </Border>
+
                 <Border Background="#1E1E1E" Padding="12" CornerRadius="8">
                     <StackPanel Spacing="8">
                         <Grid ColumnDefinitions="*, Auto">
                             <TextBlock Text="RAM Usage" Foreground="White" />
-                            <TextBlock Grid.Column="1" Text="{Binding MemoryDisplay}" Foreground="MediumPurple" FontWeight="Bold" />
+                            <TextBlock Grid.Column="1" Text="{Binding MemoryDisplay}" Foreground="MediumPurple"
+                                       FontWeight="Bold" />
                         </Grid>
-                        <ProgressBar Value="{Binding MemoryUsedBytes}" Maximum="{Binding Stats.TotalMemoryBytes, FallbackValue=100}" Height="8" Foreground="MediumPurple" Background="#333333" CornerRadius="4" />
+                        <ProgressBar Value="{Binding MemoryUsedBytes}"
+                                     Maximum="{Binding Stats.TotalMemoryBytes, FallbackValue=100}"
+                                     Height="8" Foreground="MediumPurple" Background="#333333" CornerRadius="4" />
                     </StackPanel>
                 </Border>
             </StackPanel>
+
+            <Separator Background="#333333" />
 
             <StackPanel Spacing="15">
                 <TextBlock Text="STORAGE UNITS" Foreground="Gray" FontSize="10" FontWeight="Bold" />
@@ -114,20 +164,20 @@
                                 <StackPanel Spacing="8">
                                     <Grid ColumnDefinitions="*, Auto">
                                         <TextBlock Text="{Binding Name}" Foreground="Orange" FontWeight="Bold" />
-                                        <TextBlock Grid.Column="1" 
-                                                   Text="{Binding UsedPercentage, StringFormat={}{0}% Used}" 
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding UsedPercentage, StringFormat={}{0}% Used}"
                                                    Foreground="Gray" FontSize="12" />
                                     </Grid>
 
-                                    <ProgressBar Value="{Binding UsedPercentage}" 
-                                                 Height="8" Minimum="0" Maximum="100" 
+                                    <ProgressBar Value="{Binding UsedPercentage}"
+                                                 Height="8" Minimum="0" Maximum="100"
                                                  Foreground="#FF4500" Background="#333333" CornerRadius="4" />
 
                                     <Grid ColumnDefinitions="Auto, *, Auto">
-                                        <TextBlock Text="{Binding UsedGB, StringFormat={}{0} GB Used}" 
+                                        <TextBlock Text="{Binding UsedGB, StringFormat={}{0} GB Used}"
                                                    Foreground="#AAAAAA" FontSize="11" />
-                                        <TextBlock Grid.Column="2" 
-                                                   Text="{Binding TotalGB, StringFormat={}{0} GB Total}" 
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding TotalGB, StringFormat={}{0} GB Total}"
                                                    Foreground="#666666" FontSize="11" />
                                     </Grid>
                                 </StackPanel>
