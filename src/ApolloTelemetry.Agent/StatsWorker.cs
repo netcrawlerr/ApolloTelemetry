@@ -17,10 +17,10 @@ public class StatsWorker : BackgroundService
     private long _lastBytesSent = 0;
     private DateTime _lastNetworkCheck = DateTime.Now;
 
-    private const string DashboardUrl = "http://127.0:5002/telemetry/";
+    // private const string DashboardUrl = "http://127.0:5002/telemetry/";
 
     // my LTP IP
-    // private const string DashboardUrl = "http://192.168.1.10:5002/telemetry/";
+    private const string DashboardUrl = "http://192.168.1.10:5002/telemetry/";
     private readonly TimeSpan _interval = TimeSpan.FromSeconds(5);
 
     public StatsWorker(ILogger<StatsWorker> logger)
@@ -144,8 +144,8 @@ public class StatsWorker : BackgroundService
         
         var dbNames = new Dictionary<string, (string Win, string Nix)>
         {
-            { "MySQL", ("MySQL", "mysql") },
-            { "PostgreSQL", ("postgresql-x64-16", "postgresql") },
+            { "MySQL", ("MySQL84", "mysql") },
+            { "PostgreSQL", ("postgresql-x64-18", "postgresql") },
             { "MSSQL", ("MSSQLSERVER", "mssql-server") },
             { "MongoDB", ("MongoDB", "mongod") }
         };
