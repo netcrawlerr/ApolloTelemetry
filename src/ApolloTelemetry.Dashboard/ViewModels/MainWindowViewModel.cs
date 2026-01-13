@@ -22,8 +22,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private const double GB_IN_BYTES = 1073741824.0;
 
-   
+
     public static string FormatBytesToGb(long bytes) => $"{Math.Round(bytes / GB_IN_BYTES, 1)} GB";
+
 
     public string MemoryDisplay => Stats == null
         ? "0 / 0 GB"
@@ -57,6 +58,11 @@ public partial class MainWindowViewModel : ViewModelBase
                     Dispatcher.UIThread.Post(() =>
                     {
                         Stats = receivedData;
+
+                        // re-read the calculated properties
+                        OnPropertyChanged(nameof(MemoryDisplay));
+                        OnPropertyChanged(nameof(MemoryUsedBytes));
+                        
                         foreach (var service in receivedData.DatabaseServices)
                         {
                             switch (service.Name)
@@ -69,10 +75,14 @@ public partial class MainWindowViewModel : ViewModelBase
                         }
                     });
                 }
+
                 context.Response.StatusCode = 200;
                 context.Response.Close();
             }
         }
-        catch (Exception ex) { Console.WriteLine($">>> Error: {ex.Message}"); }
+        catch (Exception ex)
+        {
+            Console.WriteLine($">>> Error: {ex.Message}");
+        }
     }
 }
