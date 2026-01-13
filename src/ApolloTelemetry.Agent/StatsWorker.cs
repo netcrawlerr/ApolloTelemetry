@@ -79,6 +79,7 @@ public class StatsWorker : BackgroundService
             OSVersion = RuntimeInformation.OSDescription,
             ProcessorCount = Environment.ProcessorCount,
             CpuUsage = GetCpuUsage(), 
+            TopProcesses = GetTopProcesses(),
             DownloadSpeedMbps = dl,
             UploadSpeedMbps = ul,
             LastUpdated = DateTime.Now,
@@ -208,6 +209,27 @@ public class StatsWorker : BackgroundService
             } catch { return 0; }
         }
         return 0; 
+    }
+    
+    private List<ProcessInfo> GetTopProcesses()
+    {
+        try
+        {
+            return Process.GetProcesses()
+                .Where(p => p.WorkingSet64 > 0)
+                .OrderByDescending(p => p.WorkingSet64)
+                .Take(5)
+                .Select(p => new ProcessInfo
+                {
+                    Name = p.ProcessName,
+                    MemoryUsageMB = Math.Round(p.WorkingSet64 / 1024.0 / 1024.0, 1),
+                })
+                .ToList();
+        }
+        catch
+        {
+            return new List<ProcessInfo>();
+        }
     }
 
     private (double dl, double ul) CalculateNetworkSpeed()

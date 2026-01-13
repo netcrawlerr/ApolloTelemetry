@@ -16,6 +16,7 @@ public class ServerStats
     public long AvailableMemoryBytes { get; set; }
     public List<DriveData> Drives { get; set; } = new();
     public List<DatabaseService> DatabaseServices { get; set; } = new();
+    public List<ProcessInfo> TopProcesses { get; set; } = new();
 }
 
 public class DriveData
