@@ -1,10 +1,14 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApolloTelemetry.Common", "src\ApolloTelemetry.Common\ApolloTelemetry.Common.csproj", "{7EC95FFB-04E5-4A6B-A4B6-4A05FBC957D4}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApolloTelemetry.Agent", "src\ApolloTelemetry.Agent\ApolloTelemetry.Agent.csproj", "{78225D0F-D227-486C-86DF-A9D9D7EF3F58}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApolloTelemetry.Agent", "src\ApolloTelemetry.Agent\ApolloTelemetry.Agent.csproj", "{DD927206-37D4-A503-1688-6CAA275CD5A8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApolloTelemetry.Dashboard", "src\ApolloTelemetry.Dashboard\ApolloTelemetry.Dashboard.csproj", "{165BCB70-3841-41EF-BE6D-52760AD2D824}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApolloTelemetry.Common", "src\ApolloTelemetry.Common\ApolloTelemetry.Common.csproj", "{88AC5390-B183-CDE2-0819-67617A620651}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApolloTelemetry.Dashboard", "src\ApolloTelemetry.Dashboard\ApolloTelemetry.Dashboard.csproj", "{21168DD7-B28E-D843-5748-B3068A11C05F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,17 +16,28 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7EC95FFB-04E5-4A6B-A4B6-4A05FBC957D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7EC95FFB-04E5-4A6B-A4B6-4A05FBC957D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7EC95FFB-04E5-4A6B-A4B6-4A05FBC957D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7EC95FFB-04E5-4A6B-A4B6-4A05FBC957D4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{78225D0F-D227-486C-86DF-A9D9D7EF3F58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{78225D0F-D227-486C-86DF-A9D9D7EF3F58}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{78225D0F-D227-486C-86DF-A9D9D7EF3F58}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{78225D0F-D227-486C-86DF-A9D9D7EF3F58}.Release|Any CPU.Build.0 = Release|Any CPU
-		{165BCB70-3841-41EF-BE6D-52760AD2D824}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{165BCB70-3841-41EF-BE6D-52760AD2D824}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{165BCB70-3841-41EF-BE6D-52760AD2D824}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{165BCB70-3841-41EF-BE6D-52760AD2D824}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD927206-37D4-A503-1688-6CAA275CD5A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD927206-37D4-A503-1688-6CAA275CD5A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD927206-37D4-A503-1688-6CAA275CD5A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD927206-37D4-A503-1688-6CAA275CD5A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88AC5390-B183-CDE2-0819-67617A620651}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88AC5390-B183-CDE2-0819-67617A620651}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88AC5390-B183-CDE2-0819-67617A620651}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88AC5390-B183-CDE2-0819-67617A620651}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21168DD7-B28E-D843-5748-B3068A11C05F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21168DD7-B28E-D843-5748-B3068A11C05F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21168DD7-B28E-D843-5748-B3068A11C05F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21168DD7-B28E-D843-5748-B3068A11C05F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DD927206-37D4-A503-1688-6CAA275CD5A8} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{88AC5390-B183-CDE2-0819-67617A620651} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{21168DD7-B28E-D843-5748-B3068A11C05F} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7E260645-186C-4DF2-A7A0-7FC2884D287B}
 	EndGlobalSection
 EndGlobal
