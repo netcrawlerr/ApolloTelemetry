@@ -1,9 +1,11 @@
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Json;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using ApolloTelemetry.Common.Models;
+using ApolloTelemetry.Common.Constants;
 
 namespace ApolloTelemetry.Agent;
 
@@ -12,15 +14,15 @@ public class StatsWorker : BackgroundService
     private readonly ILogger<StatsWorker> _logger;
     private readonly HttpClient _httpClient;
     private const double GB_IN_BYTES = 1073741824.0;
-    
+
     private long _lastBytesReceived = 0;
     private long _lastBytesSent = 0;
     private DateTime _lastNetworkCheck = DateTime.Now;
 
-    // private const string DashboardUrl = "http://127.0:5002/telemetry/";
-
     // my LTP IP
-    private const string DashboardUrl = "http://192.168.1.10:5002/telemetry/";
+    private const string Agent = Hosts.Agent;
+    private const string DashboardUrl = $"http://{Hosts.Dashboard}:5002/telemetry/";
+    
     private readonly TimeSpan _interval = TimeSpan.FromSeconds(5);
 
     public StatsWorker(ILogger<StatsWorker> logger)
@@ -32,6 +34,9 @@ public class StatsWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Agent started. Sending to: {url}", DashboardUrl);
+
+        // z KILL listener
+        _ = Task.Run(() => StartKillListener(stoppingToken), stoppingToken);
 
         // better-logs
         var logOptions = new JsonSerializerOptions { WriteIndented = true };
@@ -69,7 +74,7 @@ public class StatsWorker : BackgroundService
     {
         // using the GC API 
         var memInfo = GC.GetGCMemoryInfo();
-        
+
         var (dl, ul) = CalculateNetworkSpeed();
 
         var stats = new ServerStats
@@ -78,7 +83,7 @@ public class StatsWorker : BackgroundService
             Uptime = GetReadableUptime(),
             OSVersion = RuntimeInformation.OSDescription,
             ProcessorCount = Environment.ProcessorCount,
-            CpuUsage = GetCpuUsage(), 
+            CpuUsage = GetCpuUsage(),
             TopProcesses = GetTopProcesses(),
             DownloadSpeedMbps = dl,
             UploadSpeedMbps = ul,
@@ -141,7 +146,7 @@ public class StatsWorker : BackgroundService
             new() { Name = "MSSQL", Status = "Unknown" },
             new() { Name = "MongoDB", Status = "Unknown" }
         };
-        
+
         var dbNames = new Dictionary<string, (string Win, string Nix)>
         {
             { "MySQL", ("MySQL84", "mysql") },
@@ -201,16 +206,22 @@ public class StatsWorker : BackgroundService
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            try {
-                var info = new ProcessStartInfo("bash", "-c \"top -bn1 | grep 'Cpu(s)' | awk '{print $2 + $4}'\"") 
+            try
+            {
+                var info = new ProcessStartInfo("bash", "-c \"top -bn1 | grep 'Cpu(s)' | awk '{print $2 + $4}'\"")
                     { RedirectStandardOutput = true, UseShellExecute = false };
                 using var p = Process.Start(info);
                 return double.TryParse(p?.StandardOutput.ReadToEnd(), out var res) ? res : 0;
-            } catch { return 0; }
+            }
+            catch
+            {
+                return 0;
+            }
         }
-        return 0; 
+
+        return 0;
     }
-    
+
     private List<ProcessInfo> GetTopProcesses()
     {
         try
@@ -218,9 +229,10 @@ public class StatsWorker : BackgroundService
             return Process.GetProcesses()
                 .Where(p => p.WorkingSet64 > 0)
                 .OrderByDescending(p => p.WorkingSet64)
-                .Take(5)
+                .Take(20)
                 .Select(p => new ProcessInfo
                 {
+                    Id = p.Id,
                     Name = p.ProcessName,
                     MemoryUsageMB = Math.Round(p.WorkingSet64 / 1024.0 / 1024.0, 1),
                 })
@@ -235,13 +247,14 @@ public class StatsWorker : BackgroundService
     private (double dl, double ul) CalculateNetworkSpeed()
     {
         var interfaces = NetworkInterface.GetAllNetworkInterfaces()
-            .Where(i => i.OperationalStatus == OperationalStatus.Up && i.NetworkInterfaceType != NetworkInterfaceType.Loopback);
+            .Where(i => i.OperationalStatus == OperationalStatus.Up &&
+                        i.NetworkInterfaceType != NetworkInterfaceType.Loopback);
 
         long currentReceived = interfaces.Sum(i => i.GetIPStatistics().BytesReceived);
         long currentSent = interfaces.Sum(i => i.GetIPStatistics().BytesSent);
-        
+
         var elapsed = (DateTime.Now - _lastNetworkCheck).TotalSeconds;
-        
+
         double dl = ((currentReceived - _lastBytesReceived) * 8 / 1_048_576.0) / elapsed;
         double ul = ((currentSent - _lastBytesSent) * 8 / 1_048_576.0) / elapsed;
 
@@ -251,9 +264,56 @@ public class StatsWorker : BackgroundService
 
         return (Math.Max(0, Math.Round(dl, 2)), Math.Max(0, Math.Round(ul, 2)));
     }
+
     private string GetReadableUptime()
     {
         var t = TimeSpan.FromMilliseconds(Environment.TickCount64);
         return $"{t.Days}d {t.Hours}h {t.Minutes}m {t.Seconds}s";
+    }
+
+    private async Task StartKillListener(CancellationToken ct)
+    {
+        using var killListener = new HttpListener();
+        killListener.Prefixes.Add($"http://{Agent}:5003/kill/");
+        killListener.Start();
+
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                var context = await killListener.GetContextAsync();
+
+                // put the killin in anoth thread
+                _ = Task.Run(() => HandleKillRequest(context), ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Listener Error: {msg}", ex.Message);
+            }
+        }
+    }
+
+    private void HandleKillRequest(HttpListenerContext context)
+    {
+        using var response = context.Response;
+        try
+        {
+            var pidString = context.Request.QueryString["pid"];
+            if (int.TryParse(pidString, out int pid))
+            {
+                var p = Process.GetProcessById(pid);
+                p.Kill(true);
+                response.StatusCode = (int)HttpStatusCode.OK;
+            }
+            else
+            {
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Kill failed: {msg}", ex.Message);
+            response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        }
     }
 }
