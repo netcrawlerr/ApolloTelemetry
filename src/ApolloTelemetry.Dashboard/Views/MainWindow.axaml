@@ -112,37 +112,53 @@
             <Separator Background="#333333" />
 
             <StackPanel Spacing="10">
-                <TextBlock Text="TOP PROCESSES (BY RAM)" Foreground="Gray" FontSize="10" FontWeight="Bold" />
-                <Border Background="#1E1E1E" CornerRadius="8" Padding="5">
-                    <ItemsControl ItemsSource="{Binding Stats.TopProcesses}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="10,8">
-                                    <Grid ColumnDefinitions="*, Auto">
-                                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                            <Path Fill="MediumPurple"
-                                                  Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6Z"
-                                                  Width="14" Height="14"
-                                                  Stretch="Uniform"
-                                                  VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding Name}"
-                                                       Foreground="White"
-                                                       FontWeight="SemiBold"
-                                                       FontSize="13"
-                                                       VerticalAlignment="Center" />
-                                        </StackPanel>
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Text="PROCESS MANAGEMENT" Foreground="Gray" FontSize="10" FontWeight="Bold"
+                               VerticalAlignment="Center" />
 
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding MemoryUsageMB, StringFormat={}{0} MB}"
-                                                   Foreground="MediumPurple"
-                                                   FontSize="12"
-                                                   FontWeight="Bold"
-                                                   VerticalAlignment="Center" />
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <TextBox Grid.Column="1"
+                             Text="{Binding ProcessSearchText}"
+                             Watermark="Search process..."
+                             Width="180"
+                             FontSize="11"
+                             Padding="8,4"
+                             Background="#1E1E1E"
+                             BorderBrush="#333333"
+                             Foreground="White" />
+                </Grid>
+
+                <Border Background="#1E1E1E" CornerRadius="8" Padding="5">
+                    <ScrollViewer MaxHeight="300">
+                        <ItemsControl ItemsSource="{Binding FilteredProcesses}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="10,8">
+                                        <Grid ColumnDefinitions="*, Auto, Auto">
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <Path Fill="#FF5555"
+                                                      Data="M12,2C17.5,2 22,6.5 22,12C22,17.5 17.5,22 12,22C6.5,22 2,17.5 2,12C2,6.5 6.5,2 12,2M12,4C7.58,4 4,7.58 4,12C4,16.42 7.58,20 12,20C16.42,20 20,16.42 20,12C20,7.58 16.42,4 12,4M15,13V11H9V13H15Z"
+                                                      Width="14" Height="14" Stretch="Uniform"
+                                                      VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Name}" Foreground="White" FontSize="13"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding MemoryUsageMB, StringFormat={}{0} MB}"
+                                                       Foreground="MediumPurple" FontSize="12" Margin="0,0 " />
+
+                                            <Button Grid.Column="2"
+                                                    Content="Kill"
+                                                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).KillProcessCommand}"
+                                                    CommandParameter="{Binding Id}"
+                                                    Background="#331111" Foreground="#FF5555"
+                                                    FontSize="10" Padding="8,2" CornerRadius="4" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Border>
             </StackPanel>
 

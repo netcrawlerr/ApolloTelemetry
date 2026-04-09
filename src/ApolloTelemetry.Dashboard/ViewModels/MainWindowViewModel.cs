@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using ApolloTelemetry.Common.Constants;
 using ApolloTelemetry.Common.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Input;
 
 namespace ApolloTelemetry.Dashboard.ViewModels;
 
@@ -22,7 +26,28 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private const double GB_IN_BYTES = 1073741824.0;
 
+    private const string Agent = Hosts.Agent; 
+    private const string Dashboard = Hosts.Dashboard; 
 
+
+    // for z search
+    [ObservableProperty] private string _processSearchText = string.Empty;
+    partial void OnProcessSearchTextChanged(string value) => OnPropertyChanged(nameof(FilteredProcesses));
+    
+    public IEnumerable<ProcessInfo> FilteredProcesses
+    {
+        get
+        {
+            if (Stats?.TopProcesses == null) return Enumerable.Empty<ProcessInfo>();
+        
+            if (string.IsNullOrWhiteSpace(ProcessSearchText))
+                return Stats.TopProcesses;
+
+            return Stats.TopProcesses
+                .Where(p => p.Name.Contains(ProcessSearchText, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+    
     public static string FormatBytesToGb(long bytes) => $"{Math.Round(bytes / GB_IN_BYTES, 1)} GB";
 
 
@@ -40,7 +65,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task StartListener()
     {
         using var listener = new HttpListener();
-        listener.Prefixes.Add("http://*:5002/telemetry/");
+        listener.Prefixes.Add($"http://{Agent}:5002/telemetry/");
         try
         {
             listener.Start();
@@ -62,6 +87,7 @@ public partial class MainWindowViewModel : ViewModelBase
                         // re-read the calculated properties
                         OnPropertyChanged(nameof(MemoryDisplay));
                         OnPropertyChanged(nameof(MemoryUsedBytes));
+                        OnPropertyChanged(nameof(FilteredProcesses));
                         
                         foreach (var service in receivedData.DatabaseServices)
                         {
@@ -85,4 +111,31 @@ public partial class MainWindowViewModel : ViewModelBase
             Console.WriteLine($">>> Error: {ex.Message}");
         }
     }
+    
+   [RelayCommand]
+   public async Task KillProcess(int pid)
+   {
+       Console.WriteLine($">>> Attempting to kill PID: {pid} via Agent...");
+   
+       try 
+       {
+           using var client = new HttpClient();
+           var response = await client.PostAsync($"http://{Agent}:5003/kill/?pid={pid}", null);
+           
+           if(response.IsSuccessStatusCode)
+           {
+               Console.WriteLine($">>> Agent confirmed kill for PID: {pid}");
+           }
+           else
+           {
+               Console.WriteLine($">>> Agent rejected kill. Status: {response.StatusCode}");
+               var error = await response.Content.ReadAsStringAsync();
+               if(!string.IsNullOrEmpty(error)) Console.WriteLine($">>> Error detail: {error}");
+           }
+       }
+       catch (Exception ex) 
+       {
+           Console.WriteLine($">>> Network error during kill command: {ex.Message}");
+       }
+   }
 }
