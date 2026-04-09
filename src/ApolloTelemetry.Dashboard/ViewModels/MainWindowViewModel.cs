@@ -65,7 +65,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task StartListener()
     {
         using var listener = new HttpListener();
-        listener.Prefixes.Add($"http://{Agent}:5002/telemetry/");
+        listener.Prefixes.Add($"http://{Dashboard}:5002/telemetry/");
         try
         {
             listener.Start();
